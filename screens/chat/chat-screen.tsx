@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import {
   useCallback,
@@ -7,17 +7,17 @@ import {
   useMemo,
   useRef,
   useState,
-} from 'react'
-import { useRouter } from 'next/navigation'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+} from "react"
+import { useRouter } from "next/navigation"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 
 import {
   deriveFriendlyIdFromKey,
   isMissingGatewayAuth,
   readError,
   textFromMessage,
-} from './utils'
-import { createOptimisticMessage } from './chat-screen-utils'
+} from "./utils"
+import { createOptimisticMessage } from "./chat-screen-utils"
 import {
   chatQueryKeys,
   appendHistoryMessage,
@@ -26,13 +26,13 @@ import {
   removeHistoryMessageByClientId,
   updateHistoryMessageByClientId,
   updateSessionLastMessage,
-} from './chat-queries'
-import { chatUiQueryKey, getChatUiState, setChatUiState } from './chat-ui'
-import { ChatSidebar } from './components/chat-sidebar'
-import { ChatHeader } from './components/chat-header'
-import { ChatMessageList } from './components/chat-message-list'
-import { ChatComposer } from './components/chat-composer'
-import { GatewayStatusMessage } from './components/gateway-status-message'
+} from "./chat-queries"
+import { chatUiQueryKey, getChatUiState, setChatUiState } from "./chat-ui"
+import { ChatSidebar } from "./components/chat-sidebar"
+import { ChatHeader } from "./components/chat-header"
+import { ChatMessageList } from "./components/chat-message-list"
+import { ChatComposer } from "./components/chat-composer"
+import { GatewayStatusMessage } from "./components/gateway-status-message"
 import {
   consumePendingSend,
   hasPendingGeneration,
@@ -42,14 +42,14 @@ import {
   setRecentSession,
   setPendingGeneration,
   stashPendingSend,
-} from './pending-send'
-import { useChatMeasurements } from './hooks/use-chat-measurements'
-import { useChatHistory } from './hooks/use-chat-history'
-import { useChatMobile } from './hooks/use-chat-mobile'
-import { useChatSessions } from './hooks/use-chat-sessions'
-import type { ChatComposerHelpers } from './components/chat-composer'
-import type { HistoryResponse } from './types'
-import { cn } from '@/lib/utils'
+} from "./pending-send"
+import { useChatMeasurements } from "./hooks/use-chat-measurements"
+import { useChatHistory } from "./hooks/use-chat-history"
+import { useChatMobile } from "./hooks/use-chat-mobile"
+import { useChatSessions } from "./hooks/use-chat-sessions"
+import type { ChatComposerHelpers } from "./components/chat-composer"
+import type { HistoryResponse } from "./types"
+import { cn } from "@/lib/utils"
 
 type ChatScreenProps = {
   activeFriendlyId: string
@@ -76,14 +76,14 @@ export function ChatScreen({
   const { headerRef, composerRef, mainRef, pinGroupMinHeight, headerHeight } =
     useChatMeasurements()
   const [waitingForResponse, setWaitingForResponse] = useState(
-    () => hasPendingSend() || hasPendingGeneration(),
+    () => hasPendingSend() || hasPendingGeneration()
   )
   const [pinToTop, setPinToTop] = useState(
-    () => hasPendingSend() || hasPendingGeneration(),
+    () => hasPendingSend() || hasPendingGeneration()
   )
   const streamTimer = useRef<number | null>(null)
   const streamIdleTimer = useRef<number | null>(null)
-  const lastAssistantSignature = useRef('')
+  const lastAssistantSignature = useRef("")
   const refreshHistoryRef = useRef<() => void>(() => {})
   const pendingStartRef = useRef(false)
   const { isMobile } = useChatMobile(queryClient)
@@ -125,19 +125,19 @@ export function ChatScreen({
     staleTime: Infinity,
   })
   const gatewayStatusQuery = useQuery({
-    queryKey: ['gateway', 'status'],
+    queryKey: ["gateway", "status"],
     queryFn: fetchGatewayStatus,
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    refetchOnMount: 'always',
+    refetchOnMount: "always",
   })
   const gatewayStatusMountRef = useRef(Date.now())
   const gatewayStatusError =
     gatewayStatusQuery.error instanceof Error
       ? gatewayStatusQuery.error.message
       : gatewayStatusQuery.data && !gatewayStatusQuery.data.ok
-        ? gatewayStatusQuery.data.error || 'Gateway unavailable'
+        ? gatewayStatusQuery.data.error || "Gateway unavailable"
         : null
   const gatewayError = gatewayStatusError ?? sessionsError ?? historyError
   const handleGatewayRefetch = useCallback(() => {
@@ -147,7 +147,7 @@ export function ChatScreen({
   const handleActiveSessionDelete = useCallback(() => {
     setError(null)
     setIsRedirecting(true)
-    router.replace('/new')
+    router.push("/new")
   }, [router])
   const streamStop = useCallback(() => {
     if (streamTimer.current) {
@@ -176,6 +176,16 @@ export function ChatScreen({
     void historyQuery.refetch()
   }
 
+  const shouldRedirectToNew =
+    !isNewChat &&
+    !forcedSessionKey &&
+    !isRecentSession(activeFriendlyId) &&
+    sessionsQuery.isSuccess &&
+    sessions.length > 0 &&
+    !sessions.some((session) => session.friendlyId === activeFriendlyId) &&
+    !historyQuery.isFetching &&
+    !historyQuery.isSuccess
+
   useEffect(() => {
     if (isRedirecting) {
       if (error) setError(null)
@@ -191,13 +201,13 @@ export function ChatScreen({
     }
     const messageText = sessionsError ?? historyError ?? gatewayStatusError
     if (!messageText) {
-      if (error?.startsWith('Failed to load')) {
+      if (error?.startsWith("Failed to load")) {
         setError(null)
       }
       return
     }
     if (isMissingGatewayAuth(messageText)) {
-      router.replace('/connect')
+      router.push("/connect")
     }
     const message = sessionsError
       ? `Failed to load sessions. ${sessionsError}`
@@ -214,17 +224,10 @@ export function ChatScreen({
     isRedirecting,
     router,
     sessionsError,
+    shouldRedirectToNew,
+    sessionsQuery.isSuccess,
+    activeExists,
   ])
-
-  const shouldRedirectToNew =
-    !isNewChat &&
-    !forcedSessionKey &&
-    !isRecentSession(activeFriendlyId) &&
-    sessionsQuery.isSuccess &&
-    sessions.length > 0 &&
-    !sessions.some((session) => session.friendlyId === activeFriendlyId) &&
-    !historyQuery.isFetching &&
-    !historyQuery.isSuccess
 
   useEffect(() => {
     if (!isRedirecting) return
@@ -244,7 +247,7 @@ export function ChatScreen({
     if (!shouldRedirectToNew) return
     resetPendingSend()
     clearHistoryMessages(queryClient, activeFriendlyId, sessionKeyForHistory)
-    router.replace('/new')
+    router.push("/new")
   }, [
     activeFriendlyId,
     historyQuery.isFetching,
@@ -262,7 +265,7 @@ export function ChatScreen({
 
   useEffect(() => {
     const latestMessage = historyMessages[historyMessages.length - 1]
-    if (!latestMessage || latestMessage.role !== 'assistant') return
+    if (!latestMessage || latestMessage.role !== "assistant") return
     const signature = `${historyMessages.length}:${textFromMessage(latestMessage).slice(-64)}`
     if (signature !== lastAssistantSignature.current) {
       lastAssistantSignature.current = signature
@@ -276,7 +279,7 @@ export function ChatScreen({
   }, [historyMessages, streamFinish])
 
   useEffect(() => {
-    const resetKey = isNewChat ? 'new' : activeFriendlyId
+    const resetKey = isNewChat ? "new" : activeFriendlyId
     if (!resetKey) return
     if (pendingStartRef.current) {
       pendingStartRef.current = false
@@ -288,7 +291,7 @@ export function ChatScreen({
       return
     }
     streamStop()
-    lastAssistantSignature.current = ''
+    lastAssistantSignature.current = ""
     setWaitingForResponse(false)
     setPinToTop(false)
   }, [activeFriendlyId, isNewChat, streamStop])
@@ -297,13 +300,13 @@ export function ChatScreen({
     if (isNewChat) return
     const pending = consumePendingSend(
       forcedSessionKey || resolvedSessionKey || activeSessionKey,
-      activeFriendlyId,
+      activeFriendlyId
     )
     if (!pending) return
     pendingStartRef.current = true
     const historyKey = chatQueryKeys.history(
       pending.friendlyId,
-      pending.sessionKey,
+      pending.sessionKey
     )
     const cached = queryClient.getQueryData(historyKey) as
       | HistoryResponse
@@ -328,7 +331,7 @@ export function ChatScreen({
         queryClient,
         pending.friendlyId,
         pending.sessionKey,
-        pending.optimisticMessage,
+        pending.optimisticMessage
       )
     }
     setWaitingForResponse(true)
@@ -347,9 +350,9 @@ export function ChatScreen({
     sessionKey: string,
     friendlyId: string,
     body: string,
-    skipOptimistic = false,
+    skipOptimistic = false
   ) {
-    let optimisticClientId = ''
+    let optimisticClientId = ""
     if (!skipOptimistic) {
       const { clientId, optimisticMessage } = createOptimisticMessage(body)
       optimisticClientId = clientId
@@ -357,13 +360,13 @@ export function ChatScreen({
         queryClient,
         friendlyId,
         sessionKey,
-        optimisticMessage,
+        optimisticMessage
       )
       updateSessionLastMessage(
         queryClient,
         sessionKey,
         friendlyId,
-        optimisticMessage,
+        optimisticMessage
       )
     }
 
@@ -373,14 +376,14 @@ export function ChatScreen({
     setWaitingForResponse(true)
     setPinToTop(true)
 
-    fetch('/api/send', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
+    fetch("/api/send", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
       body: JSON.stringify({
         sessionKey,
         friendlyId,
         message: body,
-        thinking: 'low',
+        thinking: "low",
         idempotencyKey: crypto.randomUUID(),
       }),
     })
@@ -391,7 +394,7 @@ export function ChatScreen({
       .catch((err) => {
         const messageText = err instanceof Error ? err.message : String(err)
         if (isMissingGatewayAuth(messageText)) {
-          router.replace('/connect')
+          router.push("/connect")
           return
         }
         if (optimisticClientId) {
@@ -401,8 +404,8 @@ export function ChatScreen({
             sessionKey,
             optimisticClientId,
             function markFailed(message) {
-              return { ...message, status: 'error' }
-            },
+              return { ...message, status: "error" }
+            }
           )
         }
         setError(`Failed to send message. ${messageText}`)
@@ -418,9 +421,9 @@ export function ChatScreen({
   const createSessionForMessage = useCallback(async () => {
     setCreatingSession(true)
     try {
-      const res = await fetch('/api/sessions', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
+      const res = await fetch("/api/sessions", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({}),
       })
       if (!res.ok) throw new Error(await readError(res))
@@ -431,14 +434,14 @@ export function ChatScreen({
       }
 
       const sessionKey =
-        typeof data.sessionKey === 'string' ? data.sessionKey : ''
+        typeof data.sessionKey === "string" ? data.sessionKey : ""
       const friendlyId =
-        typeof data.friendlyId === 'string' && data.friendlyId.trim().length > 0
+        typeof data.friendlyId === "string" && data.friendlyId.trim().length > 0
           ? data.friendlyId.trim()
           : deriveFriendlyIdFromKey(sessionKey)
 
       if (!sessionKey || !friendlyId) {
-        throw new Error('Invalid session response')
+        throw new Error("Invalid session response")
       }
 
       queryClient.invalidateQueries({ queryKey: chatQueryKeys.sessions })
@@ -456,7 +459,7 @@ export function ChatScreen({
       if (isNewChat) {
         const { clientId, optimisticId, optimisticMessage } =
           createOptimisticMessage(body)
-        appendHistoryMessage(queryClient, 'new', 'new', optimisticMessage)
+        appendHistoryMessage(queryClient, "new", "new", optimisticMessage)
         setPendingGeneration(true)
         setSending(true)
         setWaitingForResponse(true)
@@ -480,14 +483,14 @@ export function ChatScreen({
           .catch((err: unknown) => {
             removeHistoryMessageByClientId(
               queryClient,
-              'new',
-              'new',
+              "new",
+              "new",
               clientId,
-              optimisticId,
+              optimisticId
             )
             helpers.setValue(body)
             setError(
-              `Failed to create session. ${err instanceof Error ? err.message : String(err)}`,
+              `Failed to create session. ${err instanceof Error ? err.message : String(err)}`
             )
             setPendingGeneration(false)
             setWaitingForResponse(false)
@@ -511,14 +514,14 @@ export function ChatScreen({
       onSessionResolved,
       queryClient,
       resolvedSessionKey,
-    ],
+    ]
   )
 
   const startNewChat = useCallback(() => {
     setWaitingForResponse(false)
     setPinToTop(false)
-    clearHistoryMessages(queryClient, 'new', 'new')
-    router.push('/new')
+    clearHistoryMessages(queryClient, "new", "new")
+    router.push("/new")
     if (isMobile) {
       setChatUiState(queryClient, function collapse(state) {
         return { ...state, isSidebarCollapsed: true }
@@ -581,16 +584,16 @@ export function ChatScreen({
     <div className="h-screen bg-surface text-primary-900">
       <div
         className={cn(
-          'h-full overflow-hidden',
-          isMobile ? 'relative' : 'grid grid-cols-[auto_1fr]',
+          "h-full overflow-hidden",
+          isMobile ? "relative" : "grid grid-cols-[auto_1fr]"
         )}
       >
         {hideUi ? null : isMobile ? (
           <>
             <div
               className={cn(
-                'fixed inset-y-0 left-0 z-50 w-[300px] transition-transform duration-200',
-                isSidebarCollapsed ? '-translate-x-full' : 'translate-x-0',
+                "fixed inset-y-0 left-0 z-50 w-[300px] transition-transform duration-200",
+                isSidebarCollapsed ? "-translate-x-full" : "translate-x-0"
               )}
             >
               {sidebar}

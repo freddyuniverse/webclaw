@@ -1,11 +1,6 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { CodeBlock } from '../components/prompt-kit/code-block'
+import { CodeBlock } from "@/components/prompt-kit/code-block"
 
-export const Route = createFileRoute('/connect')({
-  component: ConnectRoute,
-})
-
-function ConnectRoute() {
+export default function ConnectPage() {
   return (
     <div className="min-h-screen bg-primary-50 text-primary-900">
       <div className="max-w-2xl mx-auto px-6 py-10 space-y-10">
@@ -20,7 +15,7 @@ function ConnectRoute() {
         </div>
         <div className="space-y-4 text-primary-700">
           <p>
-            At the root of the project, create a new file named{' '}
+            At the root of the project, create a new file named{" "}
             <code className="inline-code">.env.local</code>.
           </p>
           <div className="space-y-3">
@@ -61,7 +56,7 @@ function ConnectRoute() {
               <code className="inline-code">ws://127.0.0.1:18789</code>).
             </p>
             <p>
-              <code className="inline-code">CLAWDBOT_GATEWAY_TOKEN</code>{' '}
+              <code className="inline-code">CLAWDBOT_GATEWAY_TOKEN</code>{" "}
               (recommended)
               <br />
               Matches your Gateway token (
@@ -69,7 +64,7 @@ function ConnectRoute() {
               <code className="inline-code">OPENCLAW_GATEWAY_TOKEN</code>).
             </p>
             <p>
-              <code className="inline-code">CLAWDBOT_GATEWAY_PASSWORD</code>{' '}
+              <code className="inline-code">CLAWDBOT_GATEWAY_PASSWORD</code>{" "}
               (fallback)
               <br />
               Matches your Gateway password (
@@ -77,7 +72,7 @@ function ConnectRoute() {
             </p>
           </div>
           <p>
-            Gateway docs:{' '}
+            Gateway docs:{" "}
             <a
               className="text-primary-700 hover:text-primary-900 underline"
               href="https://docs.openclaw.ai/gateway"

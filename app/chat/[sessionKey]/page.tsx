@@ -1,28 +1,28 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useCallback, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
-import { ChatScreen } from '../../screens/chat/chat-screen'
-import { moveHistoryMessages } from '../../screens/chat/chat-queries'
+"use client"
 
-export const Route = createFileRoute('/chat/$sessionKey')({
-  component: ChatRoute,
-})
+import { useCallback, useState } from "react"
+import { useParams, useRouter } from "next/navigation"
+import { useQueryClient } from "@tanstack/react-query"
+import { ChatScreen } from "@/screens/chat/chat-screen"
+import { moveHistoryMessages } from "@/screens/chat/chat-queries"
 
-function ChatRoute() {
+export default function ChatPage() {
   const queryClient = useQueryClient()
-  const navigate = useNavigate()
+  const router = useRouter()
+  const params = useParams()
   const [forcedSession, setForcedSession] = useState<{
     friendlyId: string
     sessionKey: string
   } | null>(null)
-  const params = Route.useParams()
+
   const activeFriendlyId =
-    typeof params.sessionKey === 'string' ? params.sessionKey : 'main'
-  const isNewChat = activeFriendlyId === 'new'
+    typeof params.sessionKey === "string" ? params.sessionKey : "main"
+  const isNewChat = activeFriendlyId === "new"
   const forcedSessionKey =
     forcedSession?.friendlyId === activeFriendlyId
       ? forcedSession.sessionKey
       : undefined
+
   const handleSessionResolved = useCallback(
     function handleSessionResolved(payload: {
       friendlyId: string
@@ -30,22 +30,18 @@ function ChatRoute() {
     }) {
       moveHistoryMessages(
         queryClient,
-        'new',
-        'new',
+        "new",
+        "new",
         payload.friendlyId,
-        payload.sessionKey,
+        payload.sessionKey
       )
       setForcedSession({
         friendlyId: payload.friendlyId,
         sessionKey: payload.sessionKey,
       })
-      navigate({
-        to: '/chat/$sessionKey',
-        params: { sessionKey: payload.friendlyId },
-        replace: true,
-      })
+      router.replace(`/chat/${payload.friendlyId}`)
     },
-    [navigate, queryClient],
+    [router, queryClient]
   )
 
   return (

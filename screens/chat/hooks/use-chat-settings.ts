@@ -1,7 +1,7 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState } from "react"
 
-import { readError } from '../utils'
-import type { PathsPayload } from '../types'
+import { readError } from "../utils"
+import type { PathsPayload } from "../types"
 
 export function useChatSettings() {
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -17,7 +17,7 @@ export function useChatSettings() {
 
     setPathsLoading(true)
     try {
-      const res = await fetch('/api/paths')
+      const res = await fetch("/api/paths")
       if (!res.ok) throw new Error(await readError(res))
       const data = (await res.json()) as {
         agentId?: string
@@ -26,10 +26,10 @@ export function useChatSettings() {
         storePath?: string
       }
       setPaths({
-        agentId: String(data.agentId ?? 'main'),
-        stateDir: String(data.stateDir ?? ''),
-        sessionsDir: String(data.sessionsDir ?? ''),
-        storePath: String(data.storePath ?? ''),
+        agentId: String(data.agentId ?? "main"),
+        stateDir: String(data.stateDir ?? ""),
+        sessionsDir: String(data.sessionsDir ?? ""),
+        storePath: String(data.storePath ?? ""),
       })
     } catch (err) {
       setPathsError(err instanceof Error ? err.message : String(err))
